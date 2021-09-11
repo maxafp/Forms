@@ -1,32 +1,49 @@
 import React from 'react';
-import { Typography, Button, Card, CardActions, CardContent, CardMedia } from '@material-ui/core';
+import { Container, Typography, Button, Grid } from '@material-ui/core';
+import { Link } from 'react-router-dom';
 
+import CartItem from './CartItem/CartItem';
 import useStyles from './styles';
 
-const CartItem = ({ item, onUpdateCartQty, onRemoveFromCart }) => {
+const Cart = ({ cart, onUpdateCartQty, onRemoveFromCart, onEmptyCart }) => {
   const classes = useStyles();
 
-  const handleUpdateCartQty = (lineItemId, newQuantity) => onUpdateCartQty(lineItemId, newQuantity);
+  const handleEmptyCart = () => onEmptyCart();
 
-  const handleRemoveFromCart = (lineItemId) => onRemoveFromCart(lineItemId);
+  const renderEmptyCart = () => (
+    <Typography variant="subtitle1">You have no items in your shopping cart,
+      <Link className={classes.link} to="/">start adding some</Link>!
+    </Typography>
+  );
+
+  if (!cart.line_items) return 'Loading';
+
+  const renderCart = () => (
+    <>
+      <Grid container spacing={3}>
+        {cart.line_items.map((lineItem) => (
+          <Grid item xs={12} sm={4} key={lineItem.id}>
+            <CartItem item={lineItem} onUpdateCartQty={onUpdateCartQty} onRemoveFromCart={onRemoveFromCart} />
+          </Grid>
+        ))}
+      </Grid>
+      <div className={classes.cardDetails}>
+        <Typography variant="h4">Subtotal: {cart.subtotal.formatted_with_symbol}</Typography>
+        <div>
+          <Button className={classes.emptyButton} size="large" type="button" variant="contained" color="secondary" onClick={handleEmptyCart}>Empty cart</Button>
+          <Button className={classes.checkoutButton} component={Link} to="/checkout" size="large" type="button" variant="contained" color="primary">Checkout</Button>
+        </div>
+      </div>
+    </>
+  );
 
   return (
-    <Card className="cart-item">
-      <CardMedia image={item.media.source} alt={item.name} className={classes.media} />
-      <CardContent className={classes.cardContent}>
-        <Typography variant="h4">{item.name}</Typography>
-        <Typography variant="h5">{item.line_total.formatted_with_symbol}</Typography>
-      </CardContent>
-      <CardActions className={classes.cardActions}>
-        <div className={classes.buttons}>
-          <Button type="button" size="small" onClick={() => handleUpdateCartQty(item.id, item.quantity - 1)}>-</Button>
-          <Typography>&nbsp;{item.quantity}&nbsp;</Typography>
-          <Button type="button" size="small" onClick={() => handleUpdateCartQty(item.id, item.quantity + 1)}>+</Button>
-        </div>
-        <Button variant="contained" type="button" color="secondary" onClick={() => handleRemoveFromCart(item.id)}>Remove</Button>
-      </CardActions>
-    </Card>
+    <Container>
+      <div className={classes.toolbar} />
+      <Typography className={classes.title} variant="h3" gutterBottom>Your Shopping Cart</Typography>
+      { !cart.line_items.length ? renderEmptyCart() : renderCart() }
+    </Container>
   );
 };
 
-export default CartItem;
+export default Cart;
